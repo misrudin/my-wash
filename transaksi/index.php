@@ -11,6 +11,16 @@ if(!isset($_COOKIE['cookie_admin'])){
   //get list
   $tbl = new Transaction($conn);
   $rows = $tbl->get();
+
+  // update status
+  if(isset($_POST['done'])) {
+    if($tbl->setToDone($_POST)) {
+      setMessage("Berhasil update status!-success");
+      header("Location: index.php");
+    } else {
+      setMessage("Gagal update status!-danger");
+    }
+  }
 }
 ?>
 
@@ -52,7 +62,6 @@ if(!isset($_COOKIE['cookie_admin'])){
                                 <a href="<?= base_url ?>transaksi/tambah.php">
                                   <button class="btn btn-primary">+ Tambah</button>
                                 </a>
-                                <button class="btn btn-info ml-2" data-toggle="modal" data-target="#modal-laundry">Laporan</button>
                               </div>
                             </div>
                         </div>
@@ -64,6 +73,7 @@ if(!isset($_COOKIE['cookie_admin'])){
                                             <th style="width: 80px; text-align: center">No</th>
                                             <th>Kwintansi</th>
                                             <th>Tanggal</th>
+                                            <th>Tanggal Estimasi Pengambilan</th>
                                             <th>Status</th>
                                             <th>Service</th>
                                             <th>Total Bayar</th>
@@ -75,16 +85,20 @@ if(!isset($_COOKIE['cookie_admin'])){
                                         <tr>
                                             <td style="width: 80px; text-align: center"><?= $index + 1; ?></td>
                                             <td><?= $item['no_kwitansi']; ?></td>
-                                            <td><?= date('Y/m/d', strtotime($item['created_at'])); ?></td>
-                                            <td><?= $item['status'] == 'DONE' ? 'Selesai' : 'Dalam Proses'; ?></td>
+                                            <td><?= date('Y/m/d H:i', strtotime($item['created_at'])); ?></td>
+                                            <td><?= date('Y/m/d H:i', strtotime($item['tanggal_ambil'])); ?> <span>(<?= $item['estimate']; ?> Jam)</span></td>
+                                            <td>
+                                              <p class="badge <?= $item['status'] == 'DONE' ? 'badge-success' : 'badge-warning'; ?>"><?= $item['status'] == 'DONE' ? 'Selesai' : 'Dalam Proses'; ?></p>
+                                            </td>
                                             <td><?= $item['service']; ?></td>
                                             <td><?= rupiah($item['price']); ?></td>
                                             <td style="width: 200px; text-align: center">
-                                                <button id="tombol-update" class="btn btn-sm btn-warning mr-2 <?= $item['status'] == 'DONE' ? 'invisible' : 'visible'; ?>" data-id="<?= $item['id']; ?>">Selesaikan</button>
-                                                <button data-id="<?= $item['id']; ?>" id="tombol-view" class="btn btn-sm btn-danger">View</button>
+                                                <button id="tombol-update" class="btn btn-sm btn-success mr-2 <?= $item['status'] == 'DONE' ? 'invisible' : 'visible'; ?>" data-id="<?= $item['id']; ?>" data-toggle="modal" data-target="#modal-update">Selesaikan</button>
+
+                                                <a href="<?= base_url ?>transaksi/detail.php?no_kwitansi=<?= $item['no_kwitansi']; ?>&id=<?= $item['id']; ?>" class="btn btn-sm btn-primary">View</a>
                                             </td>
                                         </tr>
-                                    <?php }?>
+                                      <?php }?>
                                     </tbody>
                                 </table>
                             </div>
@@ -128,7 +142,7 @@ if(!isset($_COOKIE['cookie_admin'])){
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Belum</button>
-              <button type="submit" name="done" class="btn btn-danger">Selesai</button>
+              <button type="submit" name="done" class="btn btn-success">Ya, Selesai</button>
             </div>
           </form>
         </div>
@@ -141,11 +155,6 @@ if(!isset($_COOKIE['cookie_admin'])){
         $(document).on('click', '#tombol-update', function() {
             const id = $(this).data('id')
             $("#id-update").val(id)
-        })
-
-        $(document).on('click', '#tombol-view', function() {
-            const id = $(this).data('id')
-            $("#id-view").val(id)
         })
     </script>
 </body>

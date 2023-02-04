@@ -26,6 +26,7 @@ class Transaction extends Connection
     {
       $query = $this->conn->prepare("
         SELECT t.id, t.no_kwitansi, t.created_at, t.status, s.name as service,
+        ADDTIME(t.created_at, CONCAT(s.estimate, ':00:00')) as tanggal_ambil, s.estimate,
         ((SELECT SUM(td.price * td.qty) from transaction_detail td WHERE td.transaction_id = t.id) + s.price) as price
         FROM transaction t
         left join service s on s.id = t.service
@@ -33,6 +34,36 @@ class Transaction extends Connection
         order by created_at desc
       ");
       $query->execute([$this->admin]);
+      $data = $query->fetchAll();
+      return $data;
+    }
+
+    public function detail($data)
+    {
+      $no_kwitansi = $data['no_kwitansi'];
+      $query = $this->conn->prepare("
+        SELECT t.id, t.no_kwitansi, t.created_at, t.status, s.name as service, s.price as service_price,
+        ADDTIME(t.created_at, CONCAT(s.estimate, ':00:00')) as tanggal_ambil, s.estimate,
+        ((SELECT SUM(td.price * td.qty) from transaction_detail td WHERE td.transaction_id = t.id) + s.price) as price
+        FROM transaction t
+        left join service s on s.id = t.service
+        where t.admin_id = ? and no_kwitansi = ?
+        order by created_at desc
+      ");
+      $query->execute([$this->admin, $no_kwitansi]);
+      $data = $query->fetch();
+      return $data;
+    }
+
+    public function detailListCucian($data)
+    {
+      $id = $data['id'];
+      $query = $this->conn->prepare("
+        SELECT td.transaction_id, td.laundry_id, td.qty, td.price, l.name, (td.qty * td.price) as total_price FROM transaction_detail td
+        LEFT JOIN laundry l on l.id = td.laundry_id
+        WHERE td.transaction_id = ?
+      ");
+      $query->execute([$id]);
       $data = $query->fetchAll();
       return $data;
     }

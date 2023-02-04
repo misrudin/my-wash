@@ -32,15 +32,15 @@ if(!isset($_COOKIE['cookie_admin'])){
       }
     }
 
-        //hapus
-        if(isset($_POST['delete'])) {
-          if($tbl->delete($_POST['id'])) {
-            setMessage("Berhasil hapus data!-success");
-            header("Location: index.php");
-          } else {
-            setMessage("Gagal hapus data!-danger");
-          }
-        }
+    //hapus
+    if(isset($_POST['delete'])) {
+      if($tbl->delete($_POST['id'])) {
+        setMessage("Berhasil hapus data!-success");
+        header("Location: index.php");
+      } else {
+        setMessage("Gagal hapus data!-danger");
+      }
+    }
 }
 ?>
 
